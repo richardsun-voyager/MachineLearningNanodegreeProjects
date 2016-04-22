@@ -1,0 +1,1 @@
+These projects are assignments of Machine Learning Engineering Nanodegree on Udacity.
