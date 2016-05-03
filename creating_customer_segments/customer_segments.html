@@ -517,7 +517,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[40]:</div>
+<div class="prompt input_prompt">In&nbsp;[70]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="c"># TODO: Make a copy of the DataFrame, using the &#39;drop&#39; function to drop the given feature</span>
@@ -526,7 +526,7 @@ div#notebook {
 
 <span class="c"># TODO: Split the data into training and testing sets using the given feature as the target</span>
 <span class="kn">from</span> <span class="nn">sklearn.cross_validation</span> <span class="kn">import</span> <span class="n">train_test_split</span>
-<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span><span class="n">data</span><span class="p">[</span><span class="n">feature_name</span><span class="p">],</span><span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span><span class="n">data</span><span class="p">[</span><span class="n">feature_name</span><span class="p">],</span><span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c"># TODO: Create a decision tree regressor and fit it to the training set</span>
 <span class="kn">from</span> <span class="nn">sklearn.tree</span> <span class="kn">import</span> <span class="n">DecisionTreeRegressor</span>
@@ -548,11 +548,11 @@ div#notebook {
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[40]:</div>
+<div class="output_area"><div class="prompt output_prompt">Out[70]:</div>
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>0.7949588927890292</pre>
+<pre>0.74736428092711271</pre>
 </div>
 
 </div>
@@ -578,7 +578,7 @@ div#notebook {
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer:</strong>
-I attempted to predict Detergents_Paper, the prediction score was 0.79 in terms of R-Square, a very large figure which meaned quite good fit. This featue is not relevant for identifying a specific customer because it is not independent.</p>
+I attempted to predict Detergents_Paper, the prediction score was 0.75 in terms of R-Square, a very large figure which meaned quite good fit. This featue is not relevant for identifying a specific customer because it is not independent.</p>
 
 </div>
 </div>
@@ -2204,7 +2204,8 @@ Hryx5DiO4ziO4ziOkwdvLDmO4ziO4ziO4+TBG0uO4ziO4ziO4zh58MaS4ziO4ziO4zhOHv4/kpeX
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer:</strong></p>
-<p>Yes, it seems two pairs: <em>Detergents_Paper and Crocery</em>, <em>Detergent_Paper and Milk</em> have certain linear relationship. This confirms my suspicions about the relevance of the feature Detergent_Paper that I attempted to predict. The data looks right skewed.</p>
+<p>Yes, it seems two pairs: <em>Detergents_Paper and Crocery</em>, <em>Detergent_Paper and Milk</em> have certain linear relationship. This confirms my suspicions about the relevance of the feature Detergent_Paper that I attempted to predict.</p>
+<p>The data is not normally distributed, it looks right skewed.</p>
 
 </div>
 </div>
@@ -9282,8 +9283,8 @@ According to the result, Sample point 0 was predicted to belong to Segment 2, na
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer</strong></p>
-<p>We assume that each year has roughly 52 weeks, and we have calculated the amount of delivery every weekday in terms of the clustering centers. It seems Segment 1 and Segment 0 are affected more because they need more storage, if the delivery frequency is changed from 5 days a week to 3 weeks a week.</p>
-<p>The distributor can make some transformation on the centers which represent the types of customers, and check which will be affected most under certain changes.</p>
+<p>We assume that each year has roughly 52 weeks, and we have calculated the amount of delivery every weekday in terms of the clustering centers. It seems Segment 1 and Segment 0 are affected more because they need more storage averagely if the delivery frequency is changed from 5 days a week to 3 weeks a week.</p>
+<p>The distributor can make some transformation on the centers which represent the types of customers, and check which centers will be affected most under certain changes. In this case, customers of Segment 1 would be affected the most due to the total costs.</p>
 
 </div>
 </div>
@@ -10069,6 +10070,19 @@ Ekt+egoAAAAASUVORK5CYII=
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
 </div>
     </div>
   </div>
