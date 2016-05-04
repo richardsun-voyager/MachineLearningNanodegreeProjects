@@ -11782,7 +11782,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="c1"># Import libraries necessary for this project</span>
@@ -11835,7 +11835,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="c1"># Display a description of the dataset</span>
@@ -11962,7 +11962,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[60]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="c1"># TODO: Select three indices of your choice you wish to sample from the dataset</span>
@@ -12046,7 +12046,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[61]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="c1">#The total cost of each sample</span>
@@ -12061,7 +12061,7 @@ div#notebook {
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[61]:</div>
+<div class="output_area"><div class="prompt output_prompt">Out[5]:</div>
 
 
 <div class="output_text output_subarea output_execute_result">
@@ -12094,9 +12094,9 @@ dtype: int64</pre>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Answer:"><strong>Answer:</strong><a class="anchor-link" href="#Answer:">&#182;</a></h3><p>The first sample represents cafes, because its total purchase cost is just 904, all of its product costs are below 25%, very low indeed.</p>
-<p>The third one represents restaurants, total purchase cost is 9657, most of its product costs are above 25%, but below 75%. Grocery and Detergents_Paper costs are below 25%.</p>
-<p>The second one represents large retailers,its total purchase cost is 192714, quite a huge number, and each of its single products cost is above 75%. Only a large retailer can support such large scales of consumption.</p>
+<h3 id="Answer:"><strong>Answer:</strong><a class="anchor-link" href="#Answer:">&#182;</a></h3><p>The first sample represents a small grocery store, because its total purchase cost is just 904, all of its product costs are below 25%, very low indeed. The spending amount of Fresh and Grocery look a little bit large</p>
+<p>The second one represents restaurants, total purchase cost is 9657, most of its product costs are above 25%, but below 75%. Grocery and Detergents_Paper costs are below 25%. The spending amounts are balanced.</p>
+<p>The third one represents large retailers,its total purchase cost is 192714, quite a huge number, and each of its single products cost is above 75%. Fresh, Milk and Grocery have large figures, namely there's a strong comsumption on daily products, only a large retailer such as a supermarket can support such large scales of consumption.</p>
 
 </div>
 </div>
@@ -19159,16 +19159,22 @@ g5j4G4Zh9CAm/oZhGD2Iib9hGEYPYuJvGIbRg5j4G4Zh9CAm/oZhGD2Iib9hGEYP8v8BF3oHaGda
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer:</strong></p>
+<p>K-Means</p>
 <ul>
-<li>K-Means: rather easy to implement and apply even on large data sets. As such, it has been successfully used in various topics, including market segmentation, computer vision, geostatistics, astronomy and agriculture. It often is used as a preprocessing step for other algorithms, for example to find a starting configuration.</li>
-<li>Gaussian Mixture Model: fast for learning mixture models but not scalable, and as this algorithm maximizes only the likelihood, it will not bias the means towards zero, or bias the cluster sizes to have specific structures that might or might not apply. Also it is monotonically non-decreasing.</li>
+<li>Advantages: easy to implement, scalable on large data sets, hard clustering, often used as a preprocessing step for other algorithms.</li>
+<li>Disadvantages: performance dependent heavily on the input of K, converge to local minimum easily.</li>
 </ul>
-<p>From the table and the scatterplots above:</p>
+<p>Gaussian Mixture Model</p>
 <ul>
-<li>it is clear that the transformed dataset doesn't have well-separated clusters and centers. It is not proper to use hard clustering method because the points do not have obvious tendancy and borders, and different initials may cause different clustering results. </li>
-<li>Besides there are only 440 samples here, not need to consider computational efficiency and scalability. </li>
+<li>Advantages: monotonically non-decreasing, soft clustering.</li>
+<li>Disadvantages: not scalable, slower than K-Means</li>
 </ul>
-<p>Therefore, we'll use soft clustering method to assign probabilities to each points of their labels, and we'll adopt <em>Gaussian Mixture Model</em> instead of K-Means Model. But if the size of datasets grow drastically, we'd better reconsider K-Means or other models.</p>
+<p>Dataset Structure:</p>
+<ul>
+<li>The transformed dataset doesn't have well-separated clusters and centers. It is not proper to use hard clustering method because the points do not have obvious tendancy and borders, and different initials may cause different clustering results. </li>
+<li>There are only 440 samples here, not need to consider computational efficiency and scalability. </li>
+</ul>
+<p>Therefore, we'll use soft clustering method to assign probabilities to each points of their labels, and we'll adopt <em>Gaussian Mixture Model</em> rather than K-Means Model. But if the size of datasets grow drastically, we'd better reconsider K-Means or other models.</p>
 
 </div>
 </div>
@@ -20295,9 +20301,9 @@ dtype: float64</pre>
 <p><strong>Answer:</strong>
 According to the total purchase of each product category:</p>
 <ul>
-<li>Segment 0 represents 'Retailer'. Products costs such as Milk, Grocery, Frozen, and Detergents_Paper are above 75%, Delicatessen is above 50%, while Fresh are just above 25%. Points of this segment should have large spending amounts in total, as retailers do.</li>
-<li>Segment 1 represent 'Restaurants'. All the products costs are above 25% in terms of the center, and most are below 50% except for Fresh and Frozen. Points of this segment should have medium spending amounts in total.</li>
-<li>Segment 2 represent 'Cafe'. All the products costs are below 25% in terms of the center. Points of this segment should have low spending accounts in total.</li>
+<li>Segment 0 represents large retailers. Products costs such as Milk, Grocery, Frozen, and Detergents_Paper are above 75%, Delicatessen is above 50%, these are all daily products for households, restaurants and cafes , whereas Fresh are just above 25%. All of which means large grocery stores or supermarkets rather than small cafes(I think cafes sell more Fresh).</li>
+<li>Segment 1 represent medium segments such as restaurants. All the products costs are above 25% in terms of the center, and most are below 50% , but Fresh and Frozen have large amounts, which means restaurants or a large cafe, because they sell fresh or frozen food more.</li>
+<li>Segment 2 represent cafes or small grocery stores. All the products costs are below 25% in terms of the center, Fresh, Milk and Grocery are relatively large, it is very likely that they are cafes and small grocery stores which run in neigbourhoods.</li>
 </ul>
 
 </div>
