@@ -19163,7 +19163,12 @@ g5j4G4Zh9CAm/oZhGD2Iib9hGEYPYuJvGIbRg5j4G4Zh9CAm/oZhGD2Iib9hGEYP8v8BF3oHaGda
 <li>K-Means: rather easy to implement and apply even on large data sets. As such, it has been successfully used in various topics, including market segmentation, computer vision, geostatistics, astronomy and agriculture. It often is used as a preprocessing step for other algorithms, for example to find a starting configuration.</li>
 <li>Gaussian Mixture Model: fast for learning mixture models but not scalable, and as this algorithm maximizes only the likelihood, it will not bias the means towards zero, or bias the cluster sizes to have specific structures that might or might not apply. Also it is monotonically non-decreasing.</li>
 </ul>
-<p>From the table and the scatterplots above, it is clear that the transformed dataset doesn't have well-separated clusters and centers. It is not proper to use hard clustering method because the points do not have obvious tendancy and borders, and different initials may cause different clustering results. Besides there are only 440 samples here, not need to consider computational efficiency. Therefore, we'll use soft clustering method to assign probabilities to each points of their labels, and we'll adopt <em>Gaussian Mixture Model</em>.</p>
+<p>From the table and the scatterplots above:</p>
+<ul>
+<li>it is clear that the transformed dataset doesn't have well-separated clusters and centers. It is not proper to use hard clustering method because the points do not have obvious tendancy and borders, and different initials may cause different clustering results. </li>
+<li>Besides there are only 440 samples here, not need to consider computational efficiency and scalability. </li>
+</ul>
+<p>Therefore, we'll use soft clustering method to assign probabilities to each points of their labels, and we'll adopt <em>Gaussian Mixture Model</em> instead of K-Means Model. But if the size of datasets grow drastically, we'd better reconsider K-Means or other models.</p>
 
 </div>
 </div>
@@ -20290,9 +20295,9 @@ dtype: float64</pre>
 <p><strong>Answer:</strong>
 According to the total purchase of each product category:</p>
 <ul>
-<li>Segment 0 represents 'Retailer'. Products costs such as Milk, Grocery, Frozen, and Detergents_Paper are above 75%, Delicatessen is above 50%, while Fresh are just above 25%. Points of this segment should have large costs in each product.</li>
-<li>Segment 1 represent 'Restaurants'. All the products costs are above 25% in terms of the center, and most are below 50% except for Fresh and Frozen. Points of this segment should have medium costs in each product.</li>
-<li>Segment 2 represent 'Cafe'. All the products costs are below 25% in terms of the center. Points of this segment should have low costs in eahc product.</li>
+<li>Segment 0 represents 'Retailer'. Products costs such as Milk, Grocery, Frozen, and Detergents_Paper are above 75%, Delicatessen is above 50%, while Fresh are just above 25%. Points of this segment should have large spending amounts in total, as retailers do.</li>
+<li>Segment 1 represent 'Restaurants'. All the products costs are above 25% in terms of the center, and most are below 50% except for Fresh and Frozen. Points of this segment should have medium spending amounts in total.</li>
+<li>Segment 2 represent 'Cafe'. All the products costs are below 25% in terms of the center. Points of this segment should have low spending accounts in total.</li>
 </ul>
 
 </div>
