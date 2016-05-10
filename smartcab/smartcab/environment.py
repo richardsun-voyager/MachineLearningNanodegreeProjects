@@ -150,7 +150,7 @@ class Environment(object):
     def get_deadline(self, agent):
         return self.agent_states[agent]['deadline'] if agent is self.primary_agent else None
 
-    def act(self, agent, action):
+    def act(self, agent, action):#Calculate the rewards given state and action
         assert agent in self.agent_states, "Unknown agent!"
         assert action in self.valid_actions, "Invalid action!"
 
