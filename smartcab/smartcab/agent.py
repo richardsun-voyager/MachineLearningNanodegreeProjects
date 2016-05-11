@@ -2,7 +2,7 @@ import random
 from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
-
+import numpy as np
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
 
@@ -12,8 +12,9 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         #Create a matrix represent the initial values for Q(s,a), there are 48 states and 4 actions
-        import numpy as np
-        Q = np.zeros([48,4])
+        self.gamma = 0.8
+        self.Q = np.zeros([48,4,4])
+        self.fh = open('q.txt','w+')
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
@@ -26,7 +27,7 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        
+        self.state = self.env.agent_states[self]
         
         # TODO: Select action according to your policy
         actions = [None, 'forward', 'left', 'right']
@@ -36,7 +37,38 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
-
+        headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
+        location = self.state['location']
+        heading = self.state['heading']
+        state_index = (location[0] - 1) * 6 + location[1] - 1 #Give the state a label
+        #Find possible adjacent states
+        
+        if heading[0]>0:#East
+            loc1 = state_index - 1
+            loc2 = state_index + 1
+            loc3 = state_index + 6
+            loc4 = state_index            
+        elif heading[1]>0:#South
+            loc1 = state_index - 6
+            loc2 = state_index + 1
+            loc3 = state_index + 6
+            loc4 = state_index
+        elif heading[1]<0:#North
+            loc1 = state_index - 1
+            loc2 = state_index + 6
+            loc3 = state_index - 6
+            loc4 = state_index
+        else:#West
+            loc1 = state_index - 6
+            loc2 = state_index - 1
+            loc3 = state_index + 1
+            loc4 = state_index
+        possible_states = [loc1%48, loc2%48, loc3%48, loc4%48]
+        self.Q[state_index,actions.index(action),headings.index(heading)] = reward + self.gamma * self.Q[possible_states,:,:].max()
+        
+        self.fh.write(self.Q)
+        self.fh.write('/n')
+        
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
