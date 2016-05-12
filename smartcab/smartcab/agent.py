@@ -14,7 +14,6 @@ class LearningAgent(Agent):
         #Create a matrix represent the initial values for Q(s,a), there are 48 states and 4 actions
         self.gamma = 0.8
         self.Q = np.zeros([48,4,4])
-        self.fh = open('q.txt','w+')
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
@@ -45,31 +44,44 @@ class LearningAgent(Agent):
         
         if heading[0]>0:#East
             loc1 = state_index - 1
+            if loc1 % 6 == 5:
+                loc1 = loc1 + 6
             loc2 = state_index + 1
-            loc3 = state_index + 6
+            if loc2 % 6 == 0:
+                loc1 = loc1 - 6
+            loc3 = (state_index + 6) % 48
             loc4 = state_index            
         elif heading[1]>0:#South
-            loc1 = state_index - 6
-            loc2 = state_index + 1
-            loc3 = state_index + 6
+            loc1 = (state_index - 6) % 48
+            loc2 = (state_index + 6) % 48
+            loc3 = state_index + 1
+            if loc3 % 6 ==0:
+                loc3 = loc3 - 6
             loc4 = state_index
         elif heading[1]<0:#North
             loc1 = state_index - 1
-            loc2 = state_index + 6
-            loc3 = state_index - 6
+            if loc1 % 6 == 5:
+                loc1 = loc1 + 6
+            loc2 = (state_index + 6) % 48
+            loc3 = (state_index - 6) % 48
             loc4 = state_index
         else:#West
-            loc1 = state_index - 6
+            loc1 = (state_index - 6) % 48
             loc2 = state_index - 1
+            if loc2 % 6 == 5:
+                loc2 = loc2 + 6
             loc3 = state_index + 1
+            if loc3 % 6 ==0:
+                loc3 = loc3 - 6
             loc4 = state_index
-        possible_states = [loc1%48, loc2%48, loc3%48, loc4%48]
+        
+        possible_states = [loc1, loc2, loc3, loc4]
+                
         self.Q[state_index,actions.index(action),headings.index(heading)] = reward + self.gamma * self.Q[possible_states,:,:].max()
         
-        self.fh.write(self.Q)
-        self.fh.write('/n')
+        print self.Q
         
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
 def run():
