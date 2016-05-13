@@ -12,12 +12,14 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         self.gamma = 0.8
+        self.learning_time = 300
         #Create a matrix represent the initial values for Q(s,a), there are 48 states and 4 actions
         self.Q = np.zeros([48,4,4])
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+        self.Q = np.zeros([48,4,4])
         
     def findNeighbouringStates(self, location, heading):#Give current state, find next possible states
         states = []
@@ -51,20 +53,29 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        state = self.env.agent_states[self]        
-        self.state = {'location': state['location'], 'heading': state['heading']} #States contain information of location and heading direction
-        
+        state = self.env.agent_states[self]   
+        current_location = state['location']
+        current_heading = state['heading']  
+        self.state = {'location': current_location, 'heading': current_heading} #States contain information of location and heading direction
+
         # TODO: Select action according to your policy
         actions = [None, 'forward', 'left', 'right']
-        action = random.choice(actions)
+        if t<self.learning_time:#If the learning process is not over
+            action = random.choice(actions)
+        else:
+            current_state_index = (current_location[0] - 1) * 6 + current_location[1] - 1 #Give the state a label
+            current_heading_index = headings.index(current_heading) #index of the heading
+            best_action_index = self.Q[current_state_index, current_heading_index, :].argmax()
+            action = actions[best_action_index]
+            
 
         # Execute action and get reward
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
-        #Current state
-        current_location = state['location']
-        current_heading = state['heading']                    
+        if t>self.learning_time:#
+            return
+        
        
         #Traffic light status
         light = 'green' if (self.env.intersections[current_location].state and current_heading[1] != 0) or ((not self.env.intersections[current_location].state) and current_heading[0] != 0) else 'red'
