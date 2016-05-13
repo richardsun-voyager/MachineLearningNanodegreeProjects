@@ -75,9 +75,9 @@ class LearningAgent(Agent):
                 loc3 = loc3 - 6
             loc4 = state_index
         
-        possible_states = [loc1, loc2, loc3, loc4]
+        possible_states = [loc1%48, loc2%48, loc3%48, loc4%48]
                 
-        self.Q[state_index,actions.index(action),headings.index(heading)] = reward + self.gamma * self.Q[possible_states,:,:].max()
+        self.Q[state_index,headings.index(heading), actions.index(action)] = reward + self.gamma * self.Q[possible_states,:,:].max()
         
         print self.Q
         
