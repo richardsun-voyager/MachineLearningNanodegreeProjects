@@ -11,13 +11,38 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        #Create a matrix represent the initial values for Q(s,a), there are 48 states and 4 actions
         self.gamma = 0.8
+        #Create a matrix represent the initial values for Q(s,a), there are 48 states and 4 actions
         self.Q = np.zeros([48,4,4])
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+        
+    def findNeighbouringStates(self, location, heading):#Give current state, find next possible states
+        states = []
+        #The 1st state
+        loc1 = location #stay still
+        state = {'location': loc1, 'heading': heading}
+        states.append(state)
+        #The 2nd state
+        loc2 = ((location[0] + heading[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
+                            (location[1] + heading[1] - self.env.bounds[1]) % (self.env.bounds[3] - self.env.bounds[1] + 1) + self.env.bounds[1])  #move forward directly
+        state = {'location': loc2, 'heading': heading}
+        states.append(state)
+        #The 3rd state
+        heading3 = (heading[1], -heading[0])
+        loc3 = ((location[0] + heading3[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
+                            (location[1] + heading3[1] - self.env.bounds[1]) % (self.env.bounds[3] - self.env.bounds[1] + 1) + self.env.bounds[1])  #turn left
+        state = {'location': loc3, 'heading': heading3}
+        states.append(state)
+        #The 4th state
+        heading4 = (-heading[1], heading[0])
+        loc4 = ((location[0] + heading4[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
+                            (location[1] + heading4[1] - self.env.bounds[1]) % (self.env.bounds[3] - self.env.bounds[1] + 1) + self.env.bounds[1])  #turn right
+        state = {'location': loc4, 'heading': heading4}
+        states.append(state)
+        return states
 
     def update(self, t):
         # Gather inputs
@@ -26,7 +51,8 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        self.state = self.env.agent_states[self]
+        state = self.env.agent_states[self]        
+        self.state = {'location': state['location'], 'heading': state['heading']} #States contain information of location and heading direction
         
         # TODO: Select action according to your policy
         actions = [None, 'forward', 'left', 'right']
@@ -36,49 +62,52 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
+        #Current state
+        current_location = state['location']
+        current_heading = state['heading']                    
+       
+        #Traffic light status
+        light = 'green' if (self.env.intersections[current_location].state and current_heading[1] != 0) or ((not self.env.intersections[current_location].state) and current_heading[0] != 0) else 'red'
+
+        # Predict next state S' according to current state S and action
+        move_okay = True
+        next_heading = current_heading
+        next_location = current_location
+        if action == 'forward':
+            if light != 'green':
+                move_okay = False
+        elif action == 'left':
+            if light == 'green':
+                next_heading = (current_heading[1], -current_heading[0])
+            else:
+                move_okay = False
+        elif action == 'right':
+            next_heading = (-current_heading[1], current_heading[0])
+
+        if action is not None:
+            if move_okay:
+                next_location = ((current_location[0] + next_heading[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
+                            (current_location[1] + next_heading[1] - self.env.bounds[1]) % (self.env.bounds[3] - self.env.bounds[1] + 1) + self.env.bounds[1])  # wrap-around
+        
+        #Find possible states of next state S'
+        possible_states = self.findNeighbouringStates(next_location, next_heading)
+        current_state_index = (current_location[0] - 1) * 6 + current_location[1] - 1 #Give the state a label
         headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
-        location = self.state['location']
-        heading = self.state['heading']
-        state_index = (location[0] - 1) * 6 + location[1] - 1 #Give the state a label
-        #Find possible adjacent states
-        
-        if heading[0]>0:#East
-            loc1 = state_index - 1
-            if loc1 % 6 == 5:
-                loc1 = loc1 + 6
-            loc2 = state_index + 1
-            if loc2 % 6 == 0:
-                loc1 = loc1 - 6
-            loc3 = (state_index + 6) % 48
-            loc4 = state_index            
-        elif heading[1]>0:#South
-            loc1 = (state_index - 6) % 48
-            loc2 = (state_index + 6) % 48
-            loc3 = state_index + 1
-            if loc3 % 6 ==0:
-                loc3 = loc3 - 6
-            loc4 = state_index
-        elif heading[1]<0:#North
-            loc1 = state_index - 1
-            if loc1 % 6 == 5:
-                loc1 = loc1 + 6
-            loc2 = (state_index + 6) % 48
-            loc3 = (state_index - 6) % 48
-            loc4 = state_index
-        else:#West
-            loc1 = (state_index - 6) % 48
-            loc2 = state_index - 1
-            if loc2 % 6 == 5:
-                loc2 = loc2 + 6
-            loc3 = state_index + 1
-            if loc3 % 6 ==0:
-                loc3 = loc3 - 6
-            loc4 = state_index
-        
-        possible_states = [loc1%48, loc2%48, loc3%48, loc4%48]
+        alpha = 1.0/(t + 1) #We introduce alpha as 1/(t + 1)
+        #Update Q values
+        max_Q = 0
+        for item in possible_states:#Find max values of Q(S', a')
+            location = item['location']
+            heading = item['heading']
+            state_index = (location[0] - 1) * 6 + location[1] - 1
+            temp = self.Q[state_index,headings.index(heading),:].max()
+            if temp > max_Q:
+                max_Q = temp
                 
-        self.Q[state_index,headings.index(heading), actions.index(action)] = reward + self.gamma * self.Q[possible_states,:,:].max()
-        
+        self.Q[current_state_index, headings.index(current_heading),actions.index(action)] = (1 - alpha) * self.Q[current_state_index, headings.index(current_heading),actions.index(action)] + alpha * (reward + self.gamma * max_Q)
+                
+
+               
         print self.Q
         
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
