@@ -12,7 +12,7 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         self.gamma = 0.8
-        self.learning_time = 300
+        self.learning_time = 1
         #Create a matrix represent the initial values for Q(s,a), there are 48 states and 4 actions
         self.Q = np.zeros([48,4,4])
 
@@ -59,6 +59,7 @@ class LearningAgent(Agent):
         self.state = {'location': current_location, 'heading': current_heading} #States contain information of location and heading direction
 
         # TODO: Select action according to your policy
+        headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
         actions = [None, 'forward', 'left', 'right']
         if t<self.learning_time:#If the learning process is not over
             action = random.choice(actions)
@@ -73,8 +74,8 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
-        if t>self.learning_time:#
-            return
+        #if t>self.learning_time:#
+            #return
         
        
         #Traffic light status
@@ -103,7 +104,6 @@ class LearningAgent(Agent):
         #Find possible states of next state S'
         possible_states = self.findNeighbouringStates(next_location, next_heading)
         current_state_index = (current_location[0] - 1) * 6 + current_location[1] - 1 #Give the state a label
-        headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
         alpha = 1.0/(t + 1) #We introduce alpha as 1/(t + 1)
         #Update Q values
         max_Q = 0
@@ -119,8 +119,8 @@ class LearningAgent(Agent):
                 
 
                
-        print self.Q
-        
+        #print self.Q
+        print t
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
