@@ -14,12 +14,12 @@ class LearningAgent(Agent):
         self.gamma = 0.8
         self.learning_time = 1
         #Create a matrix represent the initial values for Q(s,a), there are 48 states and 4 actions
-        self.Q = np.zeros([48,4,4])
+        self.Q = np.zeros([2,4,4,4,4])
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
-        self.Q = np.zeros([48,4,4])
+        self.Q = np.zeros([2,4,4,4,4])
         
     def findNeighbouringStates(self, location, heading):#Give current state, find next possible states
         states = []
@@ -45,6 +45,61 @@ class LearningAgent(Agent):
         state = {'location': loc4, 'heading': heading4}
         states.append(state)
         return states
+    
+    def findNextState(self,location,heading):
+        light = 'green' if (self.env.intersections[location].state and heading[1] != 0) or ((not self.env.intersections[location].state) and heading[0] != 0) else 'red'
+
+        # Populate oncoming, left, right
+        oncoming = None
+        left = None
+        right = None
+        for other_agent, other_state in self.env.agent_states.iteritems():
+            if agent == other_agent or location != other_state['location'] or (heading[0] == other_state['heading'][0] and heading[1] == other_state['heading'][1]):
+                continue
+            other_heading = other_agent.env.get_next_waypoint()
+            if (heading[0] * other_state['heading'][0] + heading[1] * other_state['heading'][1]) == -1:
+                if oncoming != 'left':  # we don't want to override oncoming == 'left'
+                    oncoming = other_heading
+            elif (heading[1] == other_state['heading'][0] and -heading[0] == other_state['heading'][1]):
+                if right != 'forward' and right != 'left':  # we don't want to override right == 'forward or 'left'
+                    right = other_heading
+            else:
+                if left != 'forward':  # we don't want to override left == 'forward'
+                    left = other_heading
+
+        return {'light': light, 'oncoming': oncoming, 'left': left, 'right': right}  # TODO: make this a namedtuple
+    
+    def findNextLocation(self, location, heading, action=None):        
+        light = 'green' if (self.env.intersections[location].state and heading[1] != 0) or ((not self.env.intersections[location].state) and heading[0] != 0) else 'red'
+
+        # Move agent if within bounds and obeys traffic rules
+        reward = 0  # reward/penalty
+        move_okay = True
+        if action == 'forward':
+            if light != 'green':
+                move_okay = False
+        elif action == 'left':
+            if light == 'green':
+                heading = (heading[1], -heading[0])
+            else:
+                move_okay = False
+        elif action == 'right':
+            heading = (-heading[1], heading[0])
+
+        if action is not None:
+            if move_okay:
+                location = ((location[0] + heading[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
+                            (location[1] + heading[1] - self.bounds[1]) % (self.bounds[3] - self.bounds[1] + 1) + self.bounds[1])  # wrap-around
+        return location, heading
+    
+    def findNeighboringStates(self,location,heading):
+        states =[]
+        actions = [None, 'forward', 'left', 'right']
+        for action in actions:
+            [next_location, next_heading] = findNextLocation(self,location,heading,action)
+            states.append(findNextState(self,next_location,next_heading))
+        return states
+        
 
     def update(self, t):
         # Gather inputs
@@ -53,69 +108,65 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        state = self.env.agent_states[self]   
-        current_location = state['location']
-        current_heading = state['heading']  
-        self.state = {'location': current_location, 'heading': current_heading} #States contain information of location and heading direction
+        # {'light': light, 'oncoming': oncoming, 'left': left, 'right': right} 
+        state = inputs
+        self.state = state
+        agent_state = self.env.agent_states[self]   
+        current_location = agent_state['location']
+        current_heading = agent_state['heading']  
+        #Current State 
+        headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
+        light_states = ['red', 'green']
+        actions = [None, 'forward', 'left', 'right']
+        current_light = inputs['light']
+        current_oncoming = inputs['oncoming']
+        current_left = inputs['left']
+        current_right = inputs['right']
+        light_index = light_states.index(current_light)
+        oncoming_index = actions.index(current_oncoming)
+        left_index = actions.index(current_left)
+        right_index = actions.index(current_right)        
 
         # TODO: Select action according to your policy
-        headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
-        actions = [None, 'forward', 'left', 'right']
-        if t<self.learning_time:#If the learning process is not over
-            action = random.choice(actions)
-        else:
-            current_state_index = (current_location[0] - 1) * 6 + current_location[1] - 1 #Give the state a label
-            current_heading_index = headings.index(current_heading) #index of the heading
-            best_action_index = self.Q[current_state_index, current_heading_index, :].argmax()
-            action = actions[best_action_index]
-            
+        #action = random.choice(actions)  
+        best_action_index = self.Q[light_index,oncoming_index,left_index,right_index, :].argmax()
+        action = actions[best_action_index] if best_action_index != 0 else random.choice(actions)   
+        action_index = actions.index(action)
 
+         
         # Execute action and get reward
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
-        #if t>self.learning_time:#
-            #return
-        
-       
-        #Traffic light status
-        light = 'green' if (self.env.intersections[current_location].state and current_heading[1] != 0) or ((not self.env.intersections[current_location].state) and current_heading[0] != 0) else 'red'
-
+        #Predict next location and heading
+        [next_location,next_heading] = self.findNextLocation(self,current_location,current_heading,action)
+ 
         # Predict next state S' according to current state S and action
-        move_okay = True
-        next_heading = current_heading
-        next_location = current_location
-        if action == 'forward':
-            if light != 'green':
-                move_okay = False
-        elif action == 'left':
-            if light == 'green':
-                next_heading = (current_heading[1], -current_heading[0])
-            else:
-                move_okay = False
-        elif action == 'right':
-            next_heading = (-current_heading[1], current_heading[0])
+        next_state = self.findNextState(self,next_location,next_heading)
+               
+        
 
-        if action is not None:
-            if move_okay:
-                next_location = ((current_location[0] + next_heading[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
-                            (current_location[1] + next_heading[1] - self.env.bounds[1]) % (self.env.bounds[3] - self.env.bounds[1] + 1) + self.env.bounds[1])  # wrap-around
         
         #Find possible states of next state S'
-        possible_states = self.findNeighbouringStates(next_location, next_heading)
-        current_state_index = (current_location[0] - 1) * 6 + current_location[1] - 1 #Give the state a label
-        alpha = 1.0/(t + 1) #We introduce alpha as 1/(t + 1)
+        possible_states = self.findNeighboringStates(next_location,next_heading)
+
         #Update Q values
         max_Q = 0
         for item in possible_states:#Find max values of Q(S', a')
-            location = item['location']
-            heading = item['heading']
-            state_index = (location[0] - 1) * 6 + location[1] - 1
-            temp = self.Q[state_index,headings.index(heading),:].max()
+            light = item['light']
+            oncoming = item['oncoming']
+            left = item['left']
+            right = item['right']
+            light_temp_index = light_states.index(light)
+            oncoming_temp_index = actions.index(oncoming)
+            left_temp_index = actions.index(left)
+            right_temp_index = actons.index(right)
+            temp = self.Q[light_temp_index,oncoming_temp_index,left_temp_index,right_temp_index, :].max()
             if temp > max_Q:
                 max_Q = temp
-                
-        self.Q[current_state_index, headings.index(current_heading),actions.index(action)] = (1 - alpha) * self.Q[current_state_index, headings.index(current_heading),actions.index(action)] + alpha * (reward + self.gamma * max_Q)
+
+        alpha = 0.8
+        self.Q[light_index,oncoming_index,left_index,right_index, actions_index] = (1 - alpha) * self.Q[light_index,oncoming_index,left_index,right_index, actions_index] + alpha * (reward + self.gamma * max_Q)
                 
 
                
