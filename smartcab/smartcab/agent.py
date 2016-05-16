@@ -53,10 +53,11 @@ class LearningAgent(Agent):
         oncoming = None
         left = None
         right = None
+        agent = self.env.primary_agent
         for other_agent, other_state in self.env.agent_states.iteritems():
             if agent == other_agent or location != other_state['location'] or (heading[0] == other_state['heading'][0] and heading[1] == other_state['heading'][1]):
                 continue
-            other_heading = other_agent.env.get_next_waypoint()
+            other_heading = other_agent.get_next_waypoint()
             if (heading[0] * other_state['heading'][0] + heading[1] * other_state['heading'][1]) == -1:
                 if oncoming != 'left':  # we don't want to override oncoming == 'left'
                     oncoming = other_heading
@@ -69,7 +70,7 @@ class LearningAgent(Agent):
 
         return {'light': light, 'oncoming': oncoming, 'left': left, 'right': right}  # TODO: make this a namedtuple
     
-    def findNextLocation(self, location, heading, action=None):        
+    def findNextLocation(self,location, heading, action=None):        
         light = 'green' if (self.env.intersections[location].state and heading[1] != 0) or ((not self.env.intersections[location].state) and heading[0] != 0) else 'red'
 
         # Move agent if within bounds and obeys traffic rules
@@ -89,15 +90,15 @@ class LearningAgent(Agent):
         if action is not None:
             if move_okay:
                 location = ((location[0] + heading[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
-                            (location[1] + heading[1] - self.bounds[1]) % (self.bounds[3] - self.bounds[1] + 1) + self.bounds[1])  # wrap-around
+                            (location[1] + heading[1] - self.env.bounds[1]) % (self.env.bounds[3] - self.env.bounds[1] + 1) + self.env.bounds[1])  # wrap-around
         return location, heading
     
     def findNeighboringStates(self,location,heading):
         states =[]
         actions = [None, 'forward', 'left', 'right']
         for action in actions:
-            [next_location, next_heading] = findNextLocation(self,location,heading,action)
-            states.append(findNextState(self,next_location,next_heading))
+            [next_location, next_heading] = self.findNextLocation(location,heading,action)
+            states.append(self.findNextState(next_location,next_heading))
         return states
         
 
@@ -139,10 +140,10 @@ class LearningAgent(Agent):
 
         # TODO: Learn policy based on state, action, reward
         #Predict next location and heading
-        [next_location,next_heading] = self.findNextLocation(self,current_location,current_heading,action)
+        [next_location,next_heading] = self.findNextLocation(current_location,current_heading,action)
  
         # Predict next state S' according to current state S and action
-        next_state = self.findNextState(self,next_location,next_heading)
+        next_state = self.findNextState(next_location,next_heading)
                
         
 
@@ -160,13 +161,13 @@ class LearningAgent(Agent):
             light_temp_index = light_states.index(light)
             oncoming_temp_index = actions.index(oncoming)
             left_temp_index = actions.index(left)
-            right_temp_index = actons.index(right)
+            right_temp_index = actions.index(right)
             temp = self.Q[light_temp_index,oncoming_temp_index,left_temp_index,right_temp_index, :].max()
             if temp > max_Q:
                 max_Q = temp
 
         alpha = 0.8
-        self.Q[light_index,oncoming_index,left_index,right_index, actions_index] = (1 - alpha) * self.Q[light_index,oncoming_index,left_index,right_index, actions_index] + alpha * (reward + self.gamma * max_Q)
+        self.Q[light_index,oncoming_index,left_index,right_index, action_index] = (1 - alpha) * self.Q[light_index,oncoming_index,left_index,right_index, action_index] + alpha * (reward + self.gamma * max_Q)
                 
 
                
