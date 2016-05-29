@@ -17,8 +17,11 @@ class LearningAgent(Agent):
         self.msg = None #record basic information
         self.deadline = 0
         self.step = 0
-        #Create a matrix represent the initial values for Q(s,a), there are 72 states and 4 actions
-        self.Q = np.zeros([2,9,4,4])   
+        #Create a matrix represent the initial values for Q(s,a), there are 8 states and 4 actions
+        self.prevState = None
+        self.prevAction = None
+        self.prevReward = None
+        self.Q = np.zeros([2,4,4]) 
 
 
     def reset(self, destination=None):
@@ -34,43 +37,15 @@ class LearningAgent(Agent):
         self.msg = None #record basic information
         
       
-    def findNeighboringStates(self, current_state,t):#Give current state, find next possible states
+    def findNeighboringStates(self):#Give current state, find next possible states
         states = []
+        lights = ['red', 'green']
         actions = [None,'forward', 'left', 'right'] 
-        for action in actions:
-            states.append(self.findNextState(current_state,action,t))
-        return states
-    
-    def findNextState(self,current_state,action,t):
-        destination = self.env.agent_states[self]['destination'] 
-        light = current_state['light']
-        distance = current_state['distance']
-        location = (distance[0]+destination[0],distance[1]+destination[1])
-        heading = current_state['heading']
-        move_okay = True
-        if action == 'forward':
-            if light != 'green':
-                move_okay = False
-        elif action == 'left':
-            if light == 'green':
-                heading = (heading[1], -heading[0])
-            else:
-                move_okay = False
-        elif action == 'right':
-            heading = (-heading[1], heading[0])
-
-        if action is not None:
-            if move_okay:
-                location = ((location[0] + heading[0] - self.env.bounds[0]) % (self.env.bounds[2] - self.env.bounds[0] + 1) + self.env.bounds[0],
-                            (location[1] + heading[1] - self.env.bounds[1]) % (self.env.bounds[3] - self.env.bounds[1] + 1) + self.env.bounds[1])  # wrap-around
-                
-        traffic_light = self.env.intersections[location]#Current traffic light
-        traffic_light.update(t+1)#Next moment's traffic light
-        light = 'green' if (traffic_light.state and heading[1] != 0) or ((not traffic_light.state) and heading[0] != 0) else 'red'
-        distance = (location[0] - destination[0] , location[1] - destination[1] )
-        return {'light': light, 'distance': distance, 'heading':heading}  # TODO: make this a namedtuple
-    
-    
+        for light in lights:
+            for action in actions:
+                state = {'light':light,'next_waypoint':action}
+                states.append(state)
+        return states    
          
 
     def update(self, t):
@@ -82,63 +57,55 @@ class LearningAgent(Agent):
         # TODO: Update state        
         agent_state = self.env.agent_states[self] 
         light = inputs['light'] 
-        location = agent_state['location']
-        heading = agent_state['heading']  
-        destination = agent_state['destination']
-        distance = (location[0] - destination[0] , location[1] - destination[1] ) #difference between current location and destination       
-        state = {'light':light,'distance':distance,'heading':heading}
-        self.state = {'light':light,'distance':np.sign(distance),'heading':heading}
+             
+        state = {'light':light,'next_waypoint':self.next_waypoint}
+        self.state = state
         
-        #Current State 
-        headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
-        distances =[(0, 0),(0, 1),(1, 0),(0, -1),(-1, 0),(1, 1),(1, -1),(-1, 1),(-1, -1)] #The signs of distance
-        light_states = ['red', 'green']
+        #Previous State 
+        #headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
+        #distances =[(0, 0),(0, 1),(1, 0),(0, -1),(-1, 0),(1, 1),(1, -1),(-1, 1),(-1, -1)] #The signs of distance
+        lights = ['red', 'green']
         actions = [None,'forward', 'left', 'right'] 
-
-        distance_index = distances.index(tuple(np.sign(distance)))
-        light_index = light_states.index(light)
-        heading_index = headings.index(heading)
-    
-
         # TODO: Select action according to your policy
-        Q = self.Q[light_index,distance_index,heading_index, :]
-        best_action_index = Q.argmax() #Find the action index which has the largest value in Q
-        action = actions[best_action_index]
-        epsilon = 100.0/(self.step+100)#Decrease epsilon  
+        epsilon = 100.0/(self.step+100)#Decrease epsilon 
         if random.uniform(0,1)<epsilon: #Exploration/Exploitation Trade-off
-            action = random.choice(actions)                   
-        action_index = actions.index(action)
+            action = random.choice(actions)
+        else:
+            light_index = lights.index(light)
+            nextway_index = actions.index(self.next_waypoint)
+            Q = self.Q[light_index,nextway_index,:]
+            best_action_index = Q.argmax() #Find the action index which has the largest value in Q
+            action = actions[best_action_index]
+            
         #action = self.next_waypoint
-        #action = random.choice(actions)
-         
+  
         # Execute action and get reward
         reward = self.env.act(self, action)
-
-        # TODO: Learn policy based on state, action, reward
-        # Predict next state S' according to current state S and action
-        next_state = self.findNextState(state,action,t)
         
-        #Find possible states of next state S'
-        possible_states = self.findNeighboringStates(next_state,t+1)
-
-        #Update Q values
-        max_Q = 0
-        for item in possible_states:#Find max values of Q(S', a')
-            temp_light = item['light']
-            temp_distance = item['distance']
-            temp_heading = item['heading']
-            distance_temp_index = distances.index(tuple(np.sign(temp_distance)))
-            light_temp_index = light_states.index(temp_light)
-            heading_temp_index = headings.index(temp_heading)
-            temp = self.Q[light_temp_index,distance_temp_index, 
-                          heading_temp_index, :].max()
-            if temp > max_Q:
-                max_Q = temp
-
-        alpha = 2000.0/(self.step+2000)
-        gamma = 0.2
-        self.Q[light_index,distance_index,heading_index, action_index] = (1 - alpha) * 
-        self.Q[light_index,distance_index,heading_index, action_index] + alpha * (reward + gamma * max_Q)
+        if self.prevState is not None:
+            prev_light = self.prevState['light']
+            prev_nextway = self.prevState['next_waypoint']
+            light_index = lights.index(prev_light)
+            nextway_index = actions.index(prev_nextway)
+            action_index = actions.index(self.prevAction)
+            # TODO: Learn policy based on state, action, reward
+            #Predict next state S' according to current state S and action
+            #next_state = {'light':light,'next_waypoint':action}
+            #Find possible states of next state S'
+            possible_states = self.findNeighboringStates()
+            #Update Q values
+            max_Q = 0
+            for item in possible_states:#Find max values of Q(S', a')
+                temp_light = item['light']
+                temp_nextway = item['next_waypoint']
+                light_temp_index = lights.index(temp_light)
+                nextway_temp_index = actions.index(temp_nextway)  
+                temp = self.Q[light_temp_index,nextway_temp_index,:].max()
+                if temp > max_Q:
+                    max_Q = temp
+            alpha = 0.8
+            gamma = 0.2
+            self.Q[light_index, nextway_index, action_index] = (1 - alpha) * self.Q[light_index, nextway_index, action_index] + alpha * (self.prevReward + gamma * max_Q)
                 
 
         #Record some values        
@@ -154,6 +121,9 @@ class LearningAgent(Agent):
         #print self.epsilon
         #print 'Current State', state
         #print 'Next State', next_state
+        self.prevState = state #store this state
+        self.prevAction = action
+        self.prevReward = reward
  
 
 def run():
