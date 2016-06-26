@@ -1,0 +1,37 @@
+Question 1:
+Given two strings s and t, determine whether some anagram of t is a substring of s. For example: if s = ¡°udacity¡± and t = ¡°ad¡±, then the function returns True. Your function definition should look like: ¡°question1(s, t)¡±, and return a boolean True or False.
+
+
+In this problem, I planned to transfer strings into hash table, and compare whether the characters and frequencies were identical. First I got the character dictionary of string 't', then I traversed substrings of 's' step by step, which had the same length as 't'. I mapped the substring of 's' into dictionary and compared it to that of 't', if identical, then return true.
+
+Suppose, 't' has nt characters, 's' has ns characters. The worst case was that no such anagram existed, so the function had to traverse the entire string, the complexity would be O((ns-nt+1)nt). The best case was that the substring existed right in the begining of s, the complexity would be O(2nt). The average complexity would be O((ns-nt+3)nt/2). The space complexity was O(2nt), namely the length of two dictionaries.
+
+Question 2:
+Given a string a, find the longest palindromic substring contained in a. Your function definition should look like "question2(a)", and return a string.
+
+In this problem, my plan is to treat each character as a center, and traverse its neighbors to check palindromic substrings. But there are two cases of palindromic substring, i.e., Case 1: a = 'udadu', a is symmetric around letter'a'; Case 2: a='uddu', a is symmetric around the center of 'dd'. To handle both cases, I transformed the original string by inserting a '|' between each adjacent pair of characters, i.e., a='sdshjdssd',a_transform='|s|d|s|h|j|d|s|s|d|'.
+
+After transformation, my function traversed each character, and treated each character as a axis, moved left and right at the same time, compared left neighboring characters to right neigboring characters step by step, until two corresponding characters were different, then recorded the length and substring, so I could get the length and palindromic substring for each character as an axis. Meanwhile, I kept a variable to record the longest palindromic substring during the loop.
+
+The significant part lies in the loops of traversing each character. Suppose the length of original string is n, then the transformed string length is 2n+1, the length of step ranges from 1 to n. In the worst case, for example all the characters are identical, then the algorithm has to traverse all numbers within step, the efficiency of my function was O(2(1+2+...+n))=O(n^2+n). And the best case is that none of the characters are identical, so the efficiency should be O(2n-1). The average should be O((n^2+3n-1)/2). As for the space complexity, there would be a list of n integers, and a list of n palindromic substrings, the total space complexity would be *O(2n)*.
+
+Question 3:
+Given an undirected graph G, find the minimum spanning tree within G. A minimum spanning tree connects all vertices in a graph with the smallest possible total weight of edges. Your function should take in and return an adjacency list structured like this: {'A':[('B',2)],'B':[('A',2),('C',5)],'C':[('B',5)]}. Vertices are represented as unique strings. The function definition should be "question3(G)"
+
+I have read some materials about the minimum spanning tree, there are two common algorithms, and I used one of them, Prim-Tree. First I selected a vertex randomly, stored it in a list, then I selected a closest neighboring vertex, stored it in the list which was flexible. Next I selected a vertex closest to the previous slected ones, store it in the list. I repeated it again and again until all the vertices were selected.
+
+From the beginning, I created a Prim tree. When I selected a vertex, I would add the vertex and corresponding edge to the Prim Tree. Meanwhile I would remove the corresponding edge from the original tree to avoid traverse.
+
+The part within 'while' and 'for' loops are significant for efficiency. Suppose there are V vertices and E edges, so each vertex has average 2E/V edges, and there are V(V+1)/2 iterations for all the vertices, and during each iteration, two edges will be removed, so the average efficiency would be E(V+1)-2(V-1). As for the space complexity, there were a list of V vertices, and a dictionary of 2E edges, so the total would be O(2E+V).
+
+Question 4:
+Find the least common ancestor between two nodes on a binary search tree. The least common ancestor is the farthest node from the root that is an ancestor of both nodes. For example, the root is a common ancestor of all nodes on the tree, but if both nodes are descendents of the root's left child, then that left child might be the lowest common ancestor. You can assume that both nodes are in the tree, and the tree itself adheres to all BST properties. The function definition should look like "question4(T, r, n1, n2)", where T is the tree represented as a matrix, where the index of the list is equal to the integer stored in that node and a 1 represents a child node, r is a non-negative integer representing the root, and n1 and n2 are non-negative integers representing the two nodes in no particular order. For example, one test case might be question4([[0,1,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[1,0,0,0,1],[0,0,0,0,0]],3,1,4), and the answer would be 3.
+
+In my algorithm, my plan is to traverse and compare the parent nodes for the given nodes from down to top. I first obtained ancestor nodes of the first given node from down to top until the root, stored them in a list. Then, I traversed ancestor nodes of the second node from down to top one by one, checking whether the ancestor node was also an ancestor of the first node, if so, return the ancestor node.
+
+The parts within two 'while' loops are important in terms of efficiency. As in a binary tree, the worst case was that the except the root, all the nodes only had at most 1 child, so the n1 node had a depth of n1 on the left branch, and n2 node had a depth of n2 on the right branch, there would be O(n1+n2+2). The best case was that the tree was a complete binray tree, the depth of n1 was about log2(n1+1), suppose n2 was a sibling of n1, and the time complexity would be O(log2(n1+1)+2). The average complexity would be O((n1+n2+log2(n1+1)+4)/2). As for the space comnplextity, it was the same as time complexity because they were related to the depths of given nodes.
+
+Question 5:
+Find the element in a singly linked list that's m elements from the end. For example, if a linked list has 5 elements, the 3rd element from the end is the 3rd element. The function definition should look like "question5(ll, m)", where ll is the first node of a linked list and m is the "mth number from the end". You should copy/paste the Node class below to use as a representation of a node in the linked list. Return the value of the node at that position.
+
+In this problem, I created two nodes who started from the first node of the given linked list. Then I set the second node was m steps in advance, and traversed each node to its next one at the same pace. If the second node reached end, the first node would point to the mth node from the end. The time complexity of this algorithm is O(n). The significant part lies in 'while' loops. The space complexity would be O(2).
